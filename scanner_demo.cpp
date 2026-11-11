@@ -1,4 +1,5 @@
 #include <opencv2/opencv.hpp>
+#include <opencv2/geometry.hpp>
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -15,8 +16,8 @@ namespace {
     constexpr double CANNY_LOW = 50;
     constexpr double CANNY_HIGH = 150;
 
-    // Áß½ÉÀ» ±âÁØÀ¸·Î È¸Àü ¼ø¼­·Î Á¤·ÄÇÏ°í TLºÎÅÍ ½ÃÀÛÇÑ´Ù.
-    // °á°ú: TL, TR, BR, BL
+    // ì¤‘ì‹¬ì„ ê¸°ì¤€ìœ¼ë¡œ íšŒì „ ìˆœì„œë¡œ ì •ë ¬í•˜ê³  TLë¶€í„° ì‹œì‘í•œë‹¤.
+    // ê²°ê³¼: TL, TR, BR, BL
     std::array<cv::Point2f, 4> orderPoints(
         const std::vector<cv::Point>& points)
     {
@@ -70,13 +71,13 @@ bool detectDocument(
     cv::GaussianBlur(smallGray, blurred, cv::Size(5, 5), 0);
     cv::Canny(blurred, edges, CANNY_LOW, CANNY_HIGH);
 
-    // °¡±îÀÌ ²÷¾îÁø Å×µÎ¸®¸¦ ¿¬°á
+    // ê°€ê¹Œì´ ëŠì–´ì§„ í…Œë‘ë¦¬ë¥¼ ì—°ê²°
     const cv::Mat kernel = cv::getStructuringElement(
         cv::MORPH_RECT, cv::Size(5, 5));
 
     cv::morphologyEx(edges, edges, cv::MORPH_CLOSE, kernel);
 
-    // ¿øº» Å©±â·Î º¹¿ø
+    // ì›ë³¸ í¬ê¸°ë¡œ ë³µì›
     cv::resize(
         edges, edges, input.size(), 0, 0, cv::INTER_NEAREST);
     std::vector<std::vector<cv::Point>> contours;
@@ -237,7 +238,7 @@ int main()
         }
         else {
             showImage("4 - Corrected document", corrected);
-            // DoxaÀÇ Sauvola ¾Ë°í¸®ÁòÀ¸·Î Èæ¹é ÀÌÁøÈ­
+            // Doxaì˜ Sauvola ì•Œê³ ë¦¬ì¦˜ìœ¼ë¡œ í‘ë°± ì´ì§„í™”
             const cv::Mat scan = binarizeWithDoxa(corrected);
 
             if (!scan.empty()) {
@@ -288,7 +289,7 @@ cv::Mat binarizeWithDoxa(const cv::Mat& input)
         gray.ptr<Doxa::Pixel8>()
     );
 
-    // ÃÊ±â ½ÃÇè°ª: ÁÖº¯ ¿µ¿ª Å©±â¿Í Sauvola °è¼ö
+    // ì´ˆê¸° ì‹œí—˜ê°’: ì£¼ë³€ ì˜ì—­ í¬ê¸°ì™€ Sauvola ê³„ìˆ˜
     const Doxa::Parameters parameters({
         {"window", 31},
         {"k", 0.2}
