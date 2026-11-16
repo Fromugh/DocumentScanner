@@ -163,6 +163,37 @@ cv::Mat correctPerspective(
     return corrected;
 }
 
+cv::Mat correctShadows(const cv::Mat& input)
+{
+    CV_Assert(input.type() == CV_8UC1 || input.type() == CV_8UC3);
+
+    // 그림자 보정에 사용할 8비트 회색조 영상을 준비한다.
+    cv::Mat gray;
+    if (input.type() == CV_8UC3)
+        cv::cvtColor(input, gray, cv::COLOR_BGR2GRAY);
+    else
+        gray = input;
+
+    // 이미지 크기에 맞는 커널로 어두운 글자 획을 메워 배경 밝기를 추정한다.
+    const int radius = std::max(4, std::min(gray.rows, gray.cols) / 50);
+    const int size = 2 * radius + 1;
+    const cv::Mat kernel = cv::getStructuringElement(
+        cv::MORPH_RECT, cv::Size(size, size));
+
+    cv::Mat background;
+    cv::morphologyEx(gray, background, cv::MORPH_CLOSE, kernel);
+
+    // 추정한 배경을 부드럽게 하고, 너무 어두운 곳이 과하게 밝아지지 않게 한다.
+    const double sigma = std::max(1.0, radius / 8.0);
+    cv::GaussianBlur(background, background, cv::Size(), sigma);
+    cv::max(background, 48, background);
+
+    // 각 픽셀을 주변 배경 밝기로 나눠 밝은 영역과 그림자 영역의 차이를 줄인다.
+    cv::Mat result;
+    cv::divide(gray, background, result, 240.0, CV_8U);
+    return result;
+}
+
 void showImage(const std::string& title, const cv::Mat& image)
 {
     if (image.empty())
@@ -182,11 +213,11 @@ void showImage(const std::string& title, const cv::Mat& image)
 
 int main()
 {
-    const std::string folder = "D:/DocumentScanner/";
-    const cv::Mat input = cv::imread(folder + "test.jpg");
+    const std::string folder = "./";
+    const cv::Mat input = cv::imread(folder + "test22.jpg");
 
     if (input.empty()) {
-        std::cerr << "Cannot open D:/DocumentScanner/test.jpg\n";
+        std::cerr << "Cannot open ./test.jpg\n";
         return 1;
     }
 
@@ -238,19 +269,25 @@ int main()
         }
         else {
             showImage("4 - Corrected document", corrected);
+
+            // 원근 보정 직후 그림자를 줄이고, 이진화 전 결과를 창과 PNG로 확인한다.
+            const cv::Mat shadowCorrected = correctShadows(corrected);
+            showImage("5 - Shadow", shadowCorrected);
+            cv::imwrite(folder + "shadow_corrected.png", shadowCorrected);
+
             // Doxa의 Sauvola 알고리즘으로 흑백 이진화
-            const cv::Mat scan = binarizeWithDoxa(corrected);
+            const cv::Mat scan = binarizeWithDoxa(shadowCorrected);
 
             if (!scan.empty()) {
-                showImage("5 - Doxa Sauvola scan", scan);
+                showImage("6 - Doxa Sauvola scan", scan);
 
                 if (cv::imwrite(folder + "scan_doxa.png", scan))
-                    std::cout << "Saved: D:/DocumentScanner/scan_doxa.png\n";
+                    std::cout << "Saved: ./scan_doxa.png\n";
             }
             cv::imwrite(folder + "detected.jpg", marked);
 
             if (cv::imwrite(folder + "corrected.jpg", corrected))
-                std::cout << "Saved: D:/DocumentScanner/corrected.jpg\n";
+                std::cout << "Saved: ./corrected.jpg\n";
         }
 
         cv::waitKey(0);
@@ -291,8 +328,8 @@ cv::Mat binarizeWithDoxa(const cv::Mat& input)
 
     // 초기 시험값: 주변 영역 크기와 Sauvola 계수
     const Doxa::Parameters parameters({
-        {"window", 31},
-        {"k", 0.2}
+        { "window", 31 },
+        { "k", 0.2 }
         });
 
     const Doxa::Image binary =
