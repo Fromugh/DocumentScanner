@@ -11,6 +11,7 @@ qt_add_executable(DocumentScanner
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
+    fonts.qrc
 )
 
 qt_add_translations(

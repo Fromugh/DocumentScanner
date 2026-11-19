@@ -3,10 +3,23 @@
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
+#include <QFontDatabase>
+#include <QFont>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
+    int fontId = QFontDatabase::addApplicationFont(
+        ":/fonts/GowunDodum-Regular.ttf"
+    );
+
+    if (fontId != -1) {
+        QString family =
+            QFontDatabase::applicationFontFamilies(fontId).at(0);
+
+        a.setFont(QFont(family, 10));
+    };
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();

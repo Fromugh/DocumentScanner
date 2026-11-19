@@ -36,6 +36,12 @@ Thumbs.db
 /.qmake.stash
 **/.qmlls.ini
 
+#CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+
 # qtcreator generated files
 *.pro.user*
 *.qbs.user*
@@ -82,3 +88,9 @@ CMakeLists.txt.user*
 .uic/
 /build*/
 /.qtcreator/
+
+# Visual Studio CMake generated files & user presets
+/out/
+/.vs/
+CMakeUserPresets.json
+

@@ -1,4 +1,4 @@
-#include <opencv2/opencv.hpp>
+﻿#include <opencv2/opencv.hpp>
 #include <opencv2/geometry.hpp>
 #include <algorithm>
 #include <array>
@@ -183,7 +183,7 @@ void showImage(const std::string& title, const cv::Mat& image)
 int main()
 {
     const std::string folder = "D:/DocumentScanner/";
-    const cv::Mat input = cv::imread(folder + "test.jpg");
+    const cv::Mat input = cv::imread(folder + "test22.jpg");
 
     if (input.empty()) {
         std::cerr << "Cannot open D:/DocumentScanner/test.jpg\n";
